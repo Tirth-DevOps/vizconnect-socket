@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  applicantId          String?
+  fullname             String
+  fireblockVaultId     String?
+  email                String    @unique
+  password             String?
+  isVerified           Boolean   @default(false)
+  mobileNo             String?
+  roleType             RoleType
+  customerId           String?
+  otp                  String?
+  kycStatus            Boolean?  @default(false)
+  lastLogin            DateTime?
+  resetToken           String?
+  resetTokenUsed       Boolean?  @default(false)
+  resetTokenExpiry     DateTime?
+  googleAuthQr         String?   @db.VarChar(65535)
+  googleAuthSecret     String?   @db.VarChar(500)
+  documentImage        String?   @db.VarChar(65535)
+  documentScore        Decimal?
+  faceMatchScore       Decimal?
+  identityVerification Boolean?  @default(false)
+  residentialAddress   Boolean?  @default(false)
+  addressVerification  Boolean?  @default(false)
+  twoFactorAuth        Boolean?  @default(false)
+  stripeAccountId      String? 
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+
+  Wallet        Wallet[]
+  Transaction   Transaction[]
+  ActiveSession ActiveSession[]
+  LoginHistory  LoginHistory[]
+  Notification  Notification[]
+}
+
+model Wallet {
+  id             String   @id @default(uuid())
+  userId         String
+  currency       String? // Represents the type of currency (e.g., BTC, ETH)
+  depositAddress String?
+  qrCodeAddress  String? // Optional QR code representation of the deposit address
+  balance        Float    @default(0) // Represents the balance of the wallet
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  User           User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, currency])
+}
+
+model Transaction {
+  id                      String          @id @default(uuid())
+  userId                  String
+  assetId                 String?
+  User                    User            @relation(fields: [userId], references: [id])
+  type                    TransactionType
+  status                  String?
+  networkFee              Decimal?
+  amount                  Decimal
+  sourceAddress           String
+  destinationAddress      String?
+  txHash                  String?
+  fireblocksTransactionId String          @unique
+  amountUSD               Decimal?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  deletedAt               DateTime?
+}
+
+model blog {
+  id          String    @id @default(uuid())
+  title       String
+  category    Category?
+  imageKey    String?
+  imageUrl    String?
+  description String?
+  videoKey    String?
+  videoUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ActiveSession {
+  id        String    @id @default(uuid())
+  userId    String?
+  User      User?     @relation(fields: [userId], references: [id])
+  date      DateTime? @default(now())
+  device    String?
+  location  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model LoginHistory {
+  id        String         @id @default(uuid())
+  userId    String?
+  User      User?          @relation(fields: [userId], references: [id])
+  date      DateTime?      @default(now())
+  ipAddress String?
+  used2FA   Used2FAStatus? @default(No)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Notification {
+  id      String           @id @default(uuid())
+  userId  String?
+  User    User?            @relation(fields: [userId], references: [id])
+  type    NotifcationType?
+  message String?
+  read     Boolean     @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum NotifcationType {
+  SECURITY
+  WALLET
+  TRADE
+  DEPOSIT
+  TRANSFER
+  WITHDRAW
+  NEWS
+}
+
+enum Used2FAStatus {
+  Yes
+  No
+}
+
+enum Category {
+  TUTORIAL
+  USECASE
+  TRADING
+  WALLET
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+  TRANSFER
+}
+
+enum RoleType {
+  ADMIN
+  USER
+}

@@ -1,0 +1,32 @@
+image:
+  name: sonarsource/sonar-scanner-cli:11
+  entrypoint: [""]
+
+variables:
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+
+stages:
+  - sonarqube-check
+  - sonarqube-vulnerability-report
+
+sonarqube-check:
+  stage: sonarqube-check
+  script: 
+    - sonar-scanner -Dsonar.host.url="${SONAR_HOST_URL}"
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+sonarqube-vulnerability-report:
+  stage: sonarqube-vulnerability-report
+  script:
+    - 'curl -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/issues/gitlab_sast_export?projectKey=Vizconnectweb-socket&branch=${CI_COMMIT_BRANCH}&pullRequest=${CI_MERGE_REQUEST_IID}" -o gl-sast-sonar-report.json'
+  allow_failure: true
+  when: always  # Ensures this job runs regardless of the result of the previous job
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+  artifacts:
+    expire_in: 1 day
+    reports:
+      sast: gl-sast-sonar-report.json
