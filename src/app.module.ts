@@ -5,11 +5,11 @@ import { MarketAnalysisController } from './market-analysis/market-analysis.cont
 import { MarketAnalysisGateway } from './market-analysis/market-analysis.gateway';
 import { MarketAnalysisService } from './market-analysis/market-analysis.service';
 import { OrderModule } from './order/order.module';
-import { DatabaseModule } from './database/database.module';
+// import { DatabaseModule } from './database/database.module';
 import { NotificationModule } from './notification/notification.module';
 
 @Module({
-  imports: [OrderModule, DatabaseModule, NotificationModule],
+  imports: [OrderModule, NotificationModule],
   controllers: [AppController, MarketAnalysisController],
   providers: [AppService, MarketAnalysisGateway, MarketAnalysisService],
 })
